@@ -29,7 +29,11 @@ public class ReconnectListenerService extends Service {
     audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     handler = new Handler();
 
-    registerHeadset();
+    if (audioManager.isMusicActive()) {
+      registerHeadset();
+      pause();
+      stopSelf();
+    }
 
     return Service.START_STICKY;
   }
