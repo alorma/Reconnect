@@ -27,6 +27,7 @@
       </intent-filter>
     </receiver>
 
+    <service android:name=".DisableService" />
     <service android:name=".ReconnectListenerService" />
   </application>
 
