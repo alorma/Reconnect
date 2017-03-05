@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 
@@ -25,17 +26,16 @@ public class ReconnectListenerService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-
     audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-    handler = new Handler();
-
-    if (audioManager.isMusicActive()) {
+    if (audioManager.isMusicActive() && isEnabled()) {
+      handler = new Handler();
       registerHeadset();
-      pause();
-      stopSelf();
     }
-
     return Service.START_STICKY;
+  }
+
+  private boolean isEnabled() {
+    return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.ENABLED, false);
   }
 
   private void registerHeadset() {
@@ -60,7 +60,7 @@ public class ReconnectListenerService extends Service {
     handler.postDelayed(new Runnable() {
       @Override
       public void run() {
-        if (audioManager.isWiredHeadsetOn() && !audioManager.isMusicActive()) {
+        if (isEnabled() && audioManager.isWiredHeadsetOn() && !audioManager.isMusicActive()) {
           play();
           unregister();
           stopSelf();
