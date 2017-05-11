@@ -1,3 +1,14 @@
+buildscript {
+  ext.kotlin_version = '1.1.2-3'
+  ext.anko_version = '0.10.0-beta-2'
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+  }
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
@@ -23,8 +34,7 @@ android {
 dependencies {
   compile 'com.android.support:appcompat-v7:25.3.1'
   testCompile 'junit:junit:4.12'
-  compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-}
-repositories {
-  mavenCentral()
+
+  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  compile "org.jetbrains.anko:anko-common:$anko_version"
 }
