@@ -1,44 +1,53 @@
 package com.alorma.reconnect
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
+import android.media.AudioManager
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.AppCompatActivity
+import android.widget.SeekBar
 import android.widget.Switch
+import extensions.preferences
 import org.jetbrains.anko.startService
 
 class MainActivity : AppCompatActivity() {
 
-    private var preferences: SharedPreferences? = null
     private var switchReconnect: Switch? = null
+    private var seekBarVolumeReconnect: SeekBar? = null
+
+    private val VOLUME_MAX_PROGRESS: String = "VOLUME_MAX_LEVEL"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        preferences = PreferenceManager.getDefaultSharedPreferences(this)
 
-        switchReconnect = findViewById(R.id.reconnectSwitch) as Switch
-
-        switchReconnect!!.setOnCheckedChangeListener { _, isChecked -> onStatusChanged(isChecked) }
+        getViews()
+        setupSwitch()
+        setupVolumeLevel()
     }
 
-    private val isEnabled: Boolean
-        get() = preferences!!.getBoolean(Constants.ENABLED, false)
+    private fun getViews() {
+        switchReconnect = findViewById(R.id.reconnectSwitch) as Switch
+        seekBarVolumeReconnect = findViewById(R.id.reconnectVolume) as SeekBar
+    }
 
-    override fun onStart() {
-        super.onStart()
-        switchReconnect!!.isChecked = isEnabled
-        if (isEnabled) {
-            launchNotification()
+    private fun setupSwitch() {
+        switchReconnect?.isChecked?.let { changeSeekBarState(it) }
+        switchReconnect?.setOnCheckedChangeListener { _, isChecked ->
+            onStatusChanged(isChecked)
+            changeSeekBarState(isChecked)
         }
     }
 
+    private fun changeSeekBarState(checked: Boolean) {
+        seekBarVolumeReconnect?.isEnabled = checked
+    }
+
     private fun onStatusChanged(isChecked: Boolean) {
-        val editor = preferences!!.edit()
+        val editor = preferences().edit()
         editor.putBoolean(Constants.ENABLED, isChecked)
         editor.apply()
         if (isChecked) {
@@ -46,6 +55,57 @@ class MainActivity : AppCompatActivity() {
             launchNotification()
         } else {
             dismissNotification()
+        }
+    }
+
+
+    private fun setupVolumeLevel() {
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val maxSystemVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val maxSavedVolume = preferences().getInt(VOLUME_MAX_PROGRESS, currentVolume)
+
+        configureSeekBarValues(maxSavedVolume, maxSystemVolume)
+        configureSeekBarListener()
+    }
+
+    private fun configureSeekBarValues(maxSavedVolume: Int, maxSystemVolume: Int) {
+        seekBarVolumeReconnect?.progress = maxSavedVolume
+        seekBarVolumeReconnect?.max = maxSystemVolume
+    }
+
+    private fun configureSeekBarListener() {
+        seekBarVolumeReconnect?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    savePrefVolume(progress)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                // Just an empty method
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                // Another empty method
+            }
+        })
+    }
+
+    private fun savePrefVolume(progress: Int) {
+        val editor = preferences().edit()
+        editor.putInt(VOLUME_MAX_PROGRESS, progress)
+        editor.apply()
+    }
+
+    private val isEnabled: Boolean
+        get() = preferences().getBoolean(Constants.ENABLED, false)
+
+    override fun onStart() {
+        super.onStart()
+        switchReconnect?.isChecked = isEnabled
+        if (isEnabled) {
+            launchNotification()
         }
     }
 
