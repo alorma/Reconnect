@@ -10,6 +10,7 @@ import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.AppCompatActivity
 import android.widget.SeekBar
 import android.widget.Switch
+import com.alorma.reconnect.Constants.VOLUME_MAX_PROGRESS
 import extensions.preferences
 import org.jetbrains.anko.startService
 
@@ -17,8 +18,6 @@ class MainActivity : AppCompatActivity() {
 
     private var switchReconnect: Switch? = null
     private var seekBarVolumeReconnect: SeekBar? = null
-
-    private val VOLUME_MAX_PROGRESS: String = "VOLUME_MAX_LEVEL"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +56,6 @@ class MainActivity : AppCompatActivity() {
             dismissNotification()
         }
     }
-
 
     private fun setupVolumeLevel() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
